@@ -1,0 +1,56 @@
+version: '3'
+services:
+  #  leduo-backend-practice-mysql-mybatis-app:
+  #    build:
+  #      context: ..
+  #      dockerfile: Dockerfile
+  #    container_name: leduo-mysql-mybatis-app
+  #    ports:
+  #      - "8080:8080"
+  #    depends_on:
+  #      - connect-mysql
+  #    environment:
+  #      SPRING_DATASOURCE_URL: jdbc:mysql://leduo-backend-practice-mysql:3306/base
+  #      SPRING_DATASOURCE_USERNAME: root
+  #      SPRING_DATASOURCE_PASSWORD: poorguy
+  #    networks:
+  #      - inner_network
+
+  leduo-backend-mysql:
+    image: mysql:8.0
+    container_name: leduo-backend-mysql
+    restart: unless-stopped
+    volumes:
+      - "./mysql8.0/my.cnf:/etc/mysql/my.cnf"
+      - "./mysql8.0/data:/var/lib/mysql"
+      - "./mysql8.0/mysql-files:/var/lib/mysql-files"
+      - "./mysql8.0/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d"
+    environment:
+      TZ: America/Los_Angeles
+      LANG: en_US.UTF-8
+      MYSQL_ROOT_PASSWORD: poorguy
+    ports:
+      - "3306:3306"
+    networks:
+      - inner_network
+
+  leduo-backend-redis:
+    image: redis:6.0.8
+    container_name: leduo-backend-redis
+    restart: unless-stopped
+    command: redis-server /etc/redis/redis.conf --requirepass poorguy --appendonly no
+    environment:
+      TZ: Asia/Shanghai
+      LANG: en_US.UTF-8
+    volumes:
+      - "./redis/data:/data"
+      - "./redis/config/redis.conf:/etc/redis/redis.conf"
+    ports:
+      - "6379:6379"
+    networks:
+      - inner_network
+
+networks:
+  elk:
+    driver: bridge
+  inner_network:
