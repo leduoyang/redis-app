@@ -3,7 +3,7 @@
 This repository demonstrates how to integrate Redis into a TODO application for caching purposes, improving the app's performance by reducing database query overhead.
 
 ## Repository
-The TODO app's primary purpose is to manage tasks, and it is implmeneted with MySQL at [here](https://github.com/leduoyang/mysql-mybatis-app).
+The TODO app's primary purpose is to manage tasks, and it is implemented with MySQL at [here](https://github.com/leduoyang/mysql-mybatis-app).
 
 ## Features of Redis Integration
 - **Caching for Task Retrieval:**
@@ -26,7 +26,7 @@ The TODO app's primary purpose is to manage tasks, and it is implmeneted with My
    ```bash
    docker exec -it redis-container redis-cli
    ```
-3. **Access Redis cli**
+3. **Access Redis CLI**
    ```
    redis-cli -a {password}
    127.0.0.1:6379> GET task:1
@@ -52,7 +52,24 @@ The TODO app's primary purpose is to manage tasks, and it is implmeneted with My
 4. **TTL Configuration:**
    - Cached data is set with a configurable expiry time to ensure consistency with the database.
 
-## Sample Code for Redis Caching
+## Updates to Task Management
+
+### Extended Data Model
+- Tasks are now associated with additional entities:
+  - **Project:** Contains information like project name and description.
+  - **User:** Represents the user assigned to the task, including username and role.
+
+### New Features
+1. **Get Tasks by Project ID:**
+   - Endpoint: `GET /project/{projectId}/task`
+   - Returns all tasks associated with a specific project.
+
+2. **Enhanced Task Details:**
+   - Task responses now include:
+     - Assigned user information (e.g., `username`, `role`).
+     - Project details (e.g., `projectName`, `projectDescription`).
+
+### Sample Updated Code for TaskService
 
 ```java
 @Service
@@ -64,23 +81,25 @@ public class TaskService {
     @Autowired
     private TaskRepository taskRepository;
 
-    public List<TaskResponse> getAllTasks() {
-        String cacheKey = "task:all";
+    public List<TaskResponse> getTasksByProjectId(int projectId) {
+        String cacheKey = "task:project:" + projectId;
         List<Task> taskList = (List<Task>) cacheUtil.getValue(cacheKey);
         if (taskList == null) {
-            taskList = taskRepository.getAllTasks();
+            taskList = taskRepository.getTasksByProjectId(projectId);
             cacheUtil.setValue(cacheKey, taskList);
         }
         final boolean isCache = (taskList != null);
         return taskList
                 .stream()
-                .map(x -> new TaskResponse()
-                        .setId(x.getId())
-                        .setTitle(x.getTitle())
-                        .setDescription(x.getDescription())
-                        .setStatus(x.getStatus())
-                        .setCreated_at(x.getCreatedAt())
-                        .setUpdated_at(x.getUpdatedAt())
+                .map(task -> new TaskResponse()
+                        .setId(task.getTaskId())
+                        .setTitle(task.getTaskName())
+                        .setDescription(task.getDescription())
+                        .setStatus(task.getStatus())
+                        .setCreated_at(task.getCreatedAt())
+                        .setUpdated_at(task.getUpdatedAt())
+                        .setAssignedTo(task.getAssignedTo())
+                        .setProject(task.getProject())
                         .setCache(isCache))
                 .collect(Collectors.toList());
     }
@@ -96,3 +115,6 @@ public class TaskService {
   spring.redis.password={password}
   ```
 
+- Ensure MyBatis mappings are updated to reflect the new entity relationships, as shown in the `taskResultMap` configuration.
+
+---
