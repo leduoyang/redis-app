@@ -7,22 +7,14 @@ import java.util.Date;
 
 @Accessors(chain = true)
 @Data
-public class Task {
-    private int taskId;
+public class Project {
+    private int projectId;
 
-    private String taskName;
+    private String projectName;
 
     private Date createdAt;
 
     private Date updatedAt;
 
-    private String priority;
-
-    private String status;
-
-    private int assignedTo;
-
     private String description;
-
-    private int projectId;
 }

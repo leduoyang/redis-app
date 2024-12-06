@@ -1,5 +1,7 @@
-package com.leduo.backend.data.entity;
+package com.leduo.backend.data.dto;
 
+import com.leduo.backend.data.entity.Project;
+import com.leduo.backend.data.entity.User;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -7,7 +9,7 @@ import java.util.Date;
 
 @Accessors(chain = true)
 @Data
-public class Task {
+public class TaskDto {
     private int taskId;
 
     private String taskName;
@@ -20,9 +22,9 @@ public class Task {
 
     private String status;
 
-    private int assignedTo;
-
     private String description;
 
-    private int projectId;
+    private User assignedTo;
+
+    private Project project;
 }

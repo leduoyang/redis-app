@@ -1,5 +1,6 @@
 package com.leduo.backend.data.dao;
 
+import com.leduo.backend.data.dto.TaskDto;
 import com.leduo.backend.data.entity.Task;
 
 import java.util.List;
@@ -9,9 +10,11 @@ public interface ITaskDao {
 
     int updateTask(Task task);
 
-    Task getTaskById(long id);
+    TaskDto getTaskById(int id);
 
-    List<Task> getAllTasks();
+    List<TaskDto> getAllTasks();
 
-    int deleteTask(long id);
+    int deleteTask(int id);
+
+    List<TaskDto> getTasksByProjectId(int projectId);
 }

@@ -1,6 +1,7 @@
 package com.leduo.backend.data.repository.impl;
 
 import com.leduo.backend.data.dao.ITaskDao;
+import com.leduo.backend.data.dto.TaskDto;
 import com.leduo.backend.data.entity.Task;
 import com.leduo.backend.data.repository.ITaskRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -14,9 +15,8 @@ import java.util.List;
 @Slf4j
 @Repository
 public class TaskRepositoryImpl implements ITaskRepository {
-
     @Autowired
-    ITaskDao taskDao;
+    private ITaskDao taskDao;
 
     public TaskRepositoryImpl(ITaskDao taskDao) {
         this.taskDao = taskDao;
@@ -30,15 +30,19 @@ public class TaskRepositoryImpl implements ITaskRepository {
         taskDao.updateTask(task);
     }
 
-    public List<Task> getAllTasks() {
+    public List<TaskDto> getAllTasks() {
         return taskDao.getAllTasks();
     }
 
-    public Task getTaskById(long id) {
+    public TaskDto getTaskById(int id) {
         return taskDao.getTaskById(id);
     }
 
-    public int deleteTask(long id) {
+    public int deleteTask(int id) {
         return taskDao.deleteTask(id);
+    }
+
+    public List<TaskDto> getTasksByProjectId(int projectId) {
+        return taskDao.getTasksByProjectId(projectId);
     }
 }
