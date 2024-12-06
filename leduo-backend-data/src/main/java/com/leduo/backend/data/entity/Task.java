@@ -16,6 +16,8 @@ public class Task {
 
     private Date updatedAt;
 
+    private Date dueDate;
+
     private String priority;
 
     private String status;

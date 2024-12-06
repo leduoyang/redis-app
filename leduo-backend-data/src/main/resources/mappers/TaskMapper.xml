@@ -35,7 +35,7 @@
         WHERE t.task_id = #{taskId}
     </select>
 
-    <select id="getTasksByProject" resultMap="taskResultMap">
+    <select id="getTasksByProjectId" resultMap="taskResultMap">
         SELECT t.*, u.username, u.role, p.project_name, p.description AS project_description
         FROM task t
         LEFT JOIN user u ON t.assigned_to = u.user_id
