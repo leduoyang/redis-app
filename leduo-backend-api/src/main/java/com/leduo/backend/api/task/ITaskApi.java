@@ -17,7 +17,12 @@ public interface ITaskApi {
             @NotNull @PathVariable int taskId
     );
 
-    @GetMapping(value = "/task")
+    @GetMapping(value = "/project/{projectId}/tasks")
+    APIResponse<List<TaskResponse>> getTaskByProjectId(
+            @NotNull @PathVariable int projectId
+    );
+
+    @GetMapping(value = "/tasks")
     APIResponse<List<TaskResponse>> getAllTasks();
 
     @PostMapping(value = "/task")

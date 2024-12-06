@@ -26,6 +26,12 @@ public class TaskController implements ITaskApi {
     }
 
     @Override
+    public APIResponse<List<TaskResponse>>getTaskByProjectId(int projectId) {
+        List<TaskResponse> taskListResponse = taskService.getTasksByProjectId(projectId);
+        return APIResponse.getOKJsonResult(taskListResponse);
+    }
+
+    @Override
     public APIResponse<List<TaskResponse>> getAllTasks() {
         List<TaskResponse> taskListResponse = taskService.getAllTasks();
         return APIResponse.getOKJsonResult(taskListResponse);
