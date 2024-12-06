@@ -1,8 +1,11 @@
 package com.leduo.backend.core.service.task.impl;
 
+import com.leduo.backend.api.common.vo.ProjectVo;
+import com.leduo.backend.api.common.vo.UserVo;
 import com.leduo.backend.core.service.task.ITaskService;
 import com.leduo.backend.api.task.request.TaskRequest;
 import com.leduo.backend.api.task.response.TaskResponse;
+import com.leduo.backend.data.dto.TaskDto;
 import com.leduo.backend.data.entity.Task;
 import com.leduo.backend.data.repository.ITaskRepository;
 import com.leduo.backend.middleware.CacheUtil;
@@ -16,7 +19,6 @@ import java.util.stream.Collectors;
 @Service
 public class TaskServiceImpl implements ITaskService {
     private ITaskRepository taskRepository;
-
     private CacheUtil cacheUtil;
 
     public TaskServiceImpl(ITaskRepository taskRepository, CacheUtil cacheUtil) {
@@ -25,46 +27,63 @@ public class TaskServiceImpl implements ITaskService {
     }
 
     @Override
-    public TaskResponse getTaskById(long id) {
+    public TaskResponse getTaskById(int id) {
         String cacheKey = "task:" + id;
         boolean isCache = true;
-        Task task = (Task) cacheUtil.getValue(cacheKey);
-        if (task == null) {
-            task = taskRepository.getTaskById(id);
-            cacheUtil.setValue(cacheKey, task);
+        TaskDto taskDto = (TaskDto) cacheUtil.getValue(cacheKey);
+        if (taskDto == null) {
+            taskDto = taskRepository.getTaskById(id);
+            cacheUtil.setValue(cacheKey, taskDto);
             isCache = false;
         }
 
-        TaskResponse taskResponse = new TaskResponse()
-                .setId(task.getId())
-                .setTitle(task.getTitle())
-                .setDescription(task.getDescription())
-                .setStatus(task.getStatus())
-                .setCreated_at(task.getCreatedAt())
-                .setUpdated_at(task.getUpdatedAt())
+        return new TaskResponse()
+                .setId(taskDto.getTaskId())
+                .setTitle(taskDto.getTaskName())
+                .setDescription(taskDto.getDescription())
+                .setStatus(taskDto.getStatus())
+                .setCreated_at(taskDto.getCreatedAt())
+                .setUpdated_at(taskDto.getUpdatedAt())
+                .setAssignedTo(
+                        new UserVo(
+                                taskDto.getAssignedTo().getUserId(),
+                                taskDto.getAssignedTo().getUsername(),
+                                taskDto.getAssignedTo().getRole()))
+                .setProject(
+                        new ProjectVo(
+                                taskDto.getProject().getProjectId(),
+                                taskDto.getProject().getProjectName(),
+                                taskDto.getProject().getDescription()))
                 .setCache(isCache);
-
-        return taskResponse;
     }
 
     @Override
     public List<TaskResponse> getAllTasks() {
         String cacheKey = "task:all";
-        List<Task> taskList = (List<Task>) cacheUtil.getValue(cacheKey);
-        if (taskList == null) {
-            taskList = taskRepository.getAllTasks();
-            cacheUtil.setValue(cacheKey, taskList);
+        List<TaskDto> taskDtoList = (List<TaskDto>) cacheUtil.getValue(cacheKey);
+        if (taskDtoList == null) {
+            taskDtoList = taskRepository.getAllTasks();
+            cacheUtil.setValue(cacheKey, taskDtoList);
         }
-        final boolean isCache = (taskList != null);
-        return taskList
-                .stream()
-                .map(x -> new TaskResponse()
-                        .setId(x.getId())
-                        .setTitle(x.getTitle())
-                        .setDescription(x.getDescription())
-                        .setStatus(x.getStatus())
-                        .setCreated_at(x.getCreatedAt())
-                        .setUpdated_at(x.getUpdatedAt())
+        final boolean isCache = (taskDtoList != null);
+        return taskDtoList.stream()
+                .map(taskDto -> new TaskResponse()
+                        .setId(taskDto.getTaskId())
+                        .setTitle(taskDto.getTaskName())
+                        .setDescription(taskDto.getDescription())
+                        .setStatus(taskDto.getStatus())
+                        .setAssignedTo(
+                                new UserVo(
+                                        taskDto.getAssignedTo().getUserId(),
+                                        taskDto.getAssignedTo().getUsername(),
+                                        taskDto.getAssignedTo().getRole()))
+                        .setProject(
+                                new ProjectVo(
+                                        taskDto.getProject().getProjectId(),
+                                        taskDto.getProject().getProjectName(),
+                                        taskDto.getProject().getDescription()))
+                        .setCreated_at(taskDto.getCreatedAt())
+                        .setUpdated_at(taskDto.getUpdatedAt())
                         .setCache(isCache))
                 .collect(Collectors.toList());
     }
@@ -72,25 +91,55 @@ public class TaskServiceImpl implements ITaskService {
     @Override
     public long createTask(TaskRequest request) {
         Task task = new Task()
-                .setTitle(request.getTitle())
+                .setTaskName(request.getTaskName())
                 .setDescription(request.getDescription())
                 .setStatus(request.getStatus().name());
         return taskRepository.createTask(task);
     }
 
     @Override
-    public void updateTask(long id, TaskRequest request) {
+    public void updateTask(int id, TaskRequest request) {
         Task task = new Task()
-                .setId(id)
-                .setTitle(request.getTitle())
+                .setTaskId(id)
+                .setTaskName(request.getTaskName())
                 .setDescription(request.getDescription())
                 .setStatus(request.getStatus().name());
         taskRepository.updateTask(task);
     }
 
     @Override
-    public int deleteTask(long id) {
+    public int deleteTask(int id) {
         return taskRepository.deleteTask(id);
     }
 
+    @Override
+    public List<TaskResponse> getTasksByProjectId(int projectId) {
+        String cacheKey = "task:project:" + projectId;
+        List<TaskDto> taskList = (List<TaskDto>) cacheUtil.getValue(cacheKey);
+        if (taskList == null) {
+            taskList = taskRepository.getTasksByProjectId(projectId);
+            cacheUtil.setValue(cacheKey, taskList);
+        }
+        final boolean isCache = (taskList != null);
+        return taskList.stream()
+                .map(taskDto -> new TaskResponse()
+                        .setId(taskDto.getTaskId())
+                        .setTitle(taskDto.getTaskName())
+                        .setDescription(taskDto.getDescription())
+                        .setStatus(taskDto.getStatus())
+                        .setAssignedTo(
+                                new UserVo(
+                                        taskDto.getAssignedTo().getUserId(),
+                                        taskDto.getAssignedTo().getUsername(),
+                                        taskDto.getAssignedTo().getRole()))
+                        .setProject(
+                                new ProjectVo(
+                                        taskDto.getProject().getProjectId(),
+                                        taskDto.getProject().getProjectName(),
+                                        taskDto.getProject().getDescription()))
+                        .setCreated_at(taskDto.getCreatedAt())
+                        .setUpdated_at(taskDto.getUpdatedAt())
+                        .setCache(isCache))
+                .collect(Collectors.toList());
+    }
 }

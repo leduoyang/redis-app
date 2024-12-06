@@ -8,11 +8,13 @@ import java.util.List;
 public interface ITaskService {
     long createTask(TaskRequest request);
 
-    void updateTask(long id, TaskRequest request);
+    void updateTask(int id, TaskRequest request);
 
-    TaskResponse getTaskById(long id);
+    TaskResponse getTaskById(int id);
 
     List<TaskResponse> getAllTasks();
 
-    int deleteTask(long id);
+    int deleteTask(int id);
+
+    List<TaskResponse> getTasksByProjectId(int projectId);
 }
