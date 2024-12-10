@@ -5,36 +5,28 @@ This repository demonstrates how to integrate Redis into a TODO application for 
 ## Repository
 The TODO app's primary purpose is to manage tasks, and it is implemented with MySQL at [here](https://github.com/leduoyang/mysql-mybatis-app).
 
-## Features of Redis Integration
-- **Caching for Task Retrieval:**
-  - Reduces latency for frequently accessed endpoints, such as retrieving all tasks or a specific task by ID.
-  - Minimizes the load on the database by storing task data temporarily in Redis.
-
-- **Automatic Expiry:**
-  - Ensures the cache is fresh by setting a TTL (time-to-live) for cached data.
-
 ## Redis Setup
 1. **Docker-Based Redis Setup**:
    Run Redis using Docker:
    ```bash
    docker run --name redis-container -p 6379:6379 -d redis
-   // or using docker-compose provided under the folder /docker-compose to build containers of MySQL and Redis
-   // docker-compose up --build
+   # or using docker-compose provided under the folder /docker-compose to build containers of MySQL and Redis
+   # docker-compose up --build
    ```
 2. **Verify Redis Installation:**
    Ensure Redis is running by connecting to its CLI:
    ```bash
    docker exec -it redis-container redis-cli
    ```
-3. **Access Redis CLI**
-   ```
+3. **Access Redis CLI:**
+   ```bash
    redis-cli -a {password}
    127.0.0.1:6379> GET task:1
    "{\"@class\":\"com.leduo.backend.data.entity.Task\",\"id\":1,\"title\":\"Learn Spring Boot\",\"description\":\"Work on a simple to-do app project\",\"status\":\"PENDING\",\"createdAt\":[\"java.util.Date\",1733369474000],\"updatedAt\":[\"java.util.Date\",1733369474000]}"
    127.0.0.1:6379> KEYS *
    1) "task:all"
    2) "task:1"
-   ``` 
+   ```
 
 ## Key Integration Points
 
@@ -48,9 +40,6 @@ The TODO app's primary purpose is to manage tasks, and it is implemented with My
    - Keys are designed to uniquely identify resources, such as:
      - `task:all` for all tasks.
      - `task:<taskId>` for individual tasks.
-
-4. **TTL Configuration:**
-   - Cached data is set with a configurable expiry time to ensure consistency with the database.
 
 ## Updates to Task Management
 
@@ -69,6 +58,13 @@ The TODO app's primary purpose is to manage tasks, and it is implemented with My
      - Assigned user information (e.g., `username`, `role`).
      - Project details (e.g., `projectName`, `projectDescription`).
 
+3. **New Parameter for GET Requests:**
+   - A new parameter `byCache` is introduced to control whether to retrieve tasks directly from the database (`false`) or from the cache (`true`).
+   - Example usage:
+     ```bash
+     curl -X GET "http://localhost:8080/tasks?byCache=true"
+     ```
+
 ### Sample Updated Code for TaskService
 
 ```java
@@ -81,30 +77,55 @@ public class TaskService {
     @Autowired
     private TaskRepository taskRepository;
 
-    public List<TaskResponse> getTasksByProjectId(int projectId) {
-        String cacheKey = "task:project:" + projectId;
-        List<Task> taskList = (List<Task>) cacheUtil.getValue(cacheKey);
-        if (taskList == null) {
-            taskList = taskRepository.getTasksByProjectId(projectId);
-            cacheUtil.setValue(cacheKey, taskList);
+    @Override
+    public List<TaskResponse> getAllTasks(boolean byCache) {
+        String cacheKey = "task:all";
+        List<TaskDto> taskDtoList = null;
+        if (byCache) {
+            taskDtoList = (List<TaskDto>) cacheUtil.getValue(cacheKey);
         }
-        final boolean isCache = (taskList != null);
-        return taskList
-                .stream()
-                .map(task -> new TaskResponse()
-                        .setId(task.getTaskId())
-                        .setTitle(task.getTaskName())
-                        .setDescription(task.getDescription())
-                        .setStatus(task.getStatus())
-                        .setCreated_at(task.getCreatedAt())
-                        .setUpdated_at(task.getUpdatedAt())
-                        .setAssignedTo(task.getAssignedTo())
-                        .setProject(task.getProject())
+        final boolean isCache = (taskDtoList != null);
+        if (taskDtoList == null) {
+            taskDtoList = taskRepository.getAllTasks();
+            cacheUtil.setValue(cacheKey, taskDtoList);
+        }
+        return taskDtoList.stream()
+                .map(taskDto -> new TaskResponse()
+                        .setId(taskDto.getTaskId())
+                        .setTitle(taskDto.getTaskName())
+                        .setDescription(taskDto.getDescription())
+                        .setStatus(taskDto.getStatus())
+                        .setAssignedTo(
+                                new UserVo(
+                                        taskDto.getAssignedTo().getUserId(),
+                                        taskDto.getAssignedTo().getUsername(),
+                                        taskDto.getAssignedTo().getRole()))
+                        .setProject(
+                                new ProjectVo(
+                                        taskDto.getProject().getProjectId(),
+                                        taskDto.getProject().getProjectName(),
+                                        taskDto.getProject().getDescription()))
+                        .setCreated_at(taskDto.getCreatedAt())
+                        .setUpdated_at(taskDto.getUpdatedAt())
                         .setCache(isCache))
                 .collect(Collectors.toList());
     }
 }
 ```
+
+## Performance Testing
+A Python script was used to evaluate the performance improvement when using Redis for caching. The script simulates multiple GET requests to the application and measures response times. 
+
+### Usage
+Run the script as follows:
+```bash
+python3 performance_test.py --url "http://localhost:8080/api/v1/tasks?byCache=true" --qps_from $QPS_FROM --qps_to $QPS_TO --interval $INTERVAL --duration $DURATION
+```
+
+### Performance Visualization
+Below is a comparison of the performance with and without caching:
+
+![Performance Comparison](with_without_cache.png)
 
 ## Configuration
 
@@ -114,7 +135,3 @@ public class TaskService {
   spring.redis.port=6379
   spring.redis.password={password}
   ```
-
-- Ensure MyBatis mappings are updated to reflect the new entity relationships, as shown in the `taskResultMap` configuration.
-
----
