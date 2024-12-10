@@ -14,16 +14,20 @@ import java.util.List;
 public interface ITaskApi {
     @GetMapping(value = "/task/{taskId}")
     APIResponse<TaskResponse> getTaskById(
-            @NotNull @PathVariable int taskId
+            @NotNull @PathVariable int taskId,
+            @RequestParam(required = false, defaultValue = "false") boolean byCache
     );
 
     @GetMapping(value = "/project/{projectId}/tasks")
     APIResponse<List<TaskResponse>> getTaskByProjectId(
-            @NotNull @PathVariable int projectId
+            @NotNull @PathVariable int projectId,
+            @RequestParam(required = false, defaultValue = "false") boolean byCache
     );
 
     @GetMapping(value = "/tasks")
-    APIResponse<List<TaskResponse>> getAllTasks();
+    APIResponse<List<TaskResponse>> getAllTasks(
+            @RequestParam(required = false, defaultValue = "false") boolean byCache
+    );
 
     @PostMapping(value = "/task")
     APIResponse<Long> createTask(

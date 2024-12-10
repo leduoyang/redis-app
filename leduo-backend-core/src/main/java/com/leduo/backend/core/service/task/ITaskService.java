@@ -10,11 +10,11 @@ public interface ITaskService {
 
     void updateTask(int id, TaskRequest request);
 
-    TaskResponse getTaskById(int id);
+    TaskResponse getTaskById(int id, boolean byCache);
 
-    List<TaskResponse> getAllTasks();
+    List<TaskResponse> getAllTasks(boolean byCache);
+
+    List<TaskResponse> getTasksByProjectId(int projectId, boolean byCache);
 
     int deleteTask(int id);
-
-    List<TaskResponse> getTasksByProjectId(int projectId);
 }

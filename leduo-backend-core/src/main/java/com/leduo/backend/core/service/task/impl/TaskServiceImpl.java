@@ -27,14 +27,16 @@ public class TaskServiceImpl implements ITaskService {
     }
 
     @Override
-    public TaskResponse getTaskById(int id) {
+    public TaskResponse getTaskById(int id, boolean byCache) {
         String cacheKey = "task:" + id;
-        boolean isCache = true;
-        TaskDto taskDto = (TaskDto) cacheUtil.getValue(cacheKey);
+        TaskDto taskDto = null;
+        if(byCache) {
+            taskDto = (TaskDto) cacheUtil.getValue(cacheKey);
+        }
+        boolean isCache = taskDto != null;
         if (taskDto == null) {
             taskDto = taskRepository.getTaskById(id);
             cacheUtil.setValue(cacheKey, taskDto);
-            isCache = false;
         }
 
         return new TaskResponse()
@@ -58,15 +60,52 @@ public class TaskServiceImpl implements ITaskService {
     }
 
     @Override
-    public List<TaskResponse> getAllTasks() {
+    public List<TaskResponse> getAllTasks(boolean byCache) {
         String cacheKey = "task:all";
-        List<TaskDto> taskDtoList = (List<TaskDto>) cacheUtil.getValue(cacheKey);
+        List<TaskDto> taskDtoList = null;
+        if (byCache) {
+            taskDtoList = (List<TaskDto>) cacheUtil.getValue(cacheKey);
+        }
+        final boolean isCache = (taskDtoList != null);
         if (taskDtoList == null) {
             taskDtoList = taskRepository.getAllTasks();
             cacheUtil.setValue(cacheKey, taskDtoList);
         }
-        final boolean isCache = (taskDtoList != null);
         return taskDtoList.stream()
+                .map(taskDto -> new TaskResponse()
+                        .setId(taskDto.getTaskId())
+                        .setTitle(taskDto.getTaskName())
+                        .setDescription(taskDto.getDescription())
+                        .setStatus(taskDto.getStatus())
+                        .setAssignedTo(
+                                new UserVo(
+                                        taskDto.getAssignedTo().getUserId(),
+                                        taskDto.getAssignedTo().getUsername(),
+                                        taskDto.getAssignedTo().getRole()))
+                        .setProject(
+                                new ProjectVo(
+                                        taskDto.getProject().getProjectId(),
+                                        taskDto.getProject().getProjectName(),
+                                        taskDto.getProject().getDescription()))
+                        .setCreated_at(taskDto.getCreatedAt())
+                        .setUpdated_at(taskDto.getUpdatedAt())
+                        .setCache(isCache))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TaskResponse> getTasksByProjectId(int projectId, boolean byCache) {
+        String cacheKey = "task:project:" + projectId;
+        List<TaskDto> taskList = null;
+        if (byCache) {
+            taskList = (List<TaskDto>) cacheUtil.getValue(cacheKey);
+        }
+        final boolean isCache = (taskList != null);
+        if (taskList == null) {
+            taskList = taskRepository.getTasksByProjectId(projectId);
+            cacheUtil.setValue(cacheKey, taskList);
+        }
+        return taskList.stream()
                 .map(taskDto -> new TaskResponse()
                         .setId(taskDto.getTaskId())
                         .setTitle(taskDto.getTaskName())
@@ -110,36 +149,5 @@ public class TaskServiceImpl implements ITaskService {
     @Override
     public int deleteTask(int id) {
         return taskRepository.deleteTask(id);
-    }
-
-    @Override
-    public List<TaskResponse> getTasksByProjectId(int projectId) {
-        String cacheKey = "task:project:" + projectId;
-        List<TaskDto> taskList = (List<TaskDto>) cacheUtil.getValue(cacheKey);
-        if (taskList == null) {
-            taskList = taskRepository.getTasksByProjectId(projectId);
-            cacheUtil.setValue(cacheKey, taskList);
-        }
-        final boolean isCache = (taskList != null);
-        return taskList.stream()
-                .map(taskDto -> new TaskResponse()
-                        .setId(taskDto.getTaskId())
-                        .setTitle(taskDto.getTaskName())
-                        .setDescription(taskDto.getDescription())
-                        .setStatus(taskDto.getStatus())
-                        .setAssignedTo(
-                                new UserVo(
-                                        taskDto.getAssignedTo().getUserId(),
-                                        taskDto.getAssignedTo().getUsername(),
-                                        taskDto.getAssignedTo().getRole()))
-                        .setProject(
-                                new ProjectVo(
-                                        taskDto.getProject().getProjectId(),
-                                        taskDto.getProject().getProjectName(),
-                                        taskDto.getProject().getDescription()))
-                        .setCreated_at(taskDto.getCreatedAt())
-                        .setUpdated_at(taskDto.getUpdatedAt())
-                        .setCache(isCache))
-                .collect(Collectors.toList());
     }
 }

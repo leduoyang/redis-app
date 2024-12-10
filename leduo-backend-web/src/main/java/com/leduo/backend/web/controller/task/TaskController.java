@@ -6,6 +6,7 @@ import com.leduo.backend.api.task.request.TaskRequest;
 import com.leduo.backend.api.task.response.TaskResponse;
 import com.leduo.backend.core.service.task.ITaskService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -20,20 +21,28 @@ public class TaskController implements ITaskApi {
     }
 
     @Override
-    public APIResponse<TaskResponse> getTaskById(int taskId) {
-        TaskResponse taskResponse = taskService.getTaskById(taskId);
+    public APIResponse<TaskResponse> getTaskById(
+            int taskId,
+            @RequestParam(required = false, defaultValue = "false") boolean byCache
+    ) {
+        TaskResponse taskResponse = taskService.getTaskById(taskId, byCache);
         return APIResponse.getOKJsonResult(taskResponse);
     }
 
     @Override
-    public APIResponse<List<TaskResponse>>getTaskByProjectId(int projectId) {
-        List<TaskResponse> taskListResponse = taskService.getTasksByProjectId(projectId);
+    public APIResponse<List<TaskResponse>> getTaskByProjectId(
+            int projectId,
+            @RequestParam(required = false, defaultValue = "false") boolean byCache
+    ) {
+        List<TaskResponse> taskListResponse = taskService.getTasksByProjectId(projectId, byCache);
         return APIResponse.getOKJsonResult(taskListResponse);
     }
 
     @Override
-    public APIResponse<List<TaskResponse>> getAllTasks() {
-        List<TaskResponse> taskListResponse = taskService.getAllTasks();
+    public APIResponse<List<TaskResponse>> getAllTasks(
+            @RequestParam(required = false, defaultValue = "false") boolean byCache
+    ) {
+        List<TaskResponse> taskListResponse = taskService.getAllTasks(byCache);
         return APIResponse.getOKJsonResult(taskListResponse);
     }
 
