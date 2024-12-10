@@ -32,10 +32,11 @@ public class TaskServiceImpl implements ITaskService {
         String cacheKey = "task:" + id;
         TaskDto taskDto = null;
         if (byCache) {
-            taskDto = (TaskDto) cacheUtil.getValue(cacheKey);
-            if (taskDto.equals(cacheUtil.NULL_PLACEHOLDER)) {
+            Object cachedData = cacheUtil.getValue(cacheKey);
+            if (cachedData != null && cachedData.equals(cacheUtil.NULL_PLACEHOLDER)) {
                 return null;
             }
+            taskDto = (TaskDto) cachedData;
         }
         if (taskDto == null) {
             taskDto = taskRepository.getTaskById(id);
@@ -71,10 +72,11 @@ public class TaskServiceImpl implements ITaskService {
         String cacheKey = "task:all";
         List<TaskDto> taskDtoList = null;
         if (byCache) {
-            taskDtoList = (List<TaskDto>) cacheUtil.getValue(cacheKey);
-            if (taskDtoList.equals(cacheUtil.NULL_PLACEHOLDER)) {
+            Object cachedData = cacheUtil.getValue(cacheKey);
+            if (cachedData != null && cachedData.equals(cacheUtil.NULL_PLACEHOLDER)) {
                 return new ArrayList<>();
             }
+            taskDtoList = (List<TaskDto>) cachedData;
         }
         if (taskDtoList == null) {
             taskDtoList = taskRepository.getAllTasks();
@@ -112,10 +114,11 @@ public class TaskServiceImpl implements ITaskService {
         String cacheKey = "task:project:" + projectId;
         List<TaskDto> taskDtoList = null;
         if (byCache) {
-            taskDtoList = (List<TaskDto>) cacheUtil.getValue(cacheKey);
-            if (taskDtoList.equals(cacheUtil.NULL_PLACEHOLDER)) {
+            Object cachedData = cacheUtil.getValue(cacheKey);
+            if (cachedData != null && cachedData.equals(cacheUtil.NULL_PLACEHOLDER)) {
                 return new ArrayList<>();
             }
+            taskDtoList = (List<TaskDto>) cachedData;
         }
         final boolean isCache = (taskDtoList != null);
         if (taskDtoList == null) {
