@@ -23,26 +23,29 @@ public class TaskController implements ITaskApi {
     @Override
     public APIResponse<TaskResponse> getTaskById(
             int taskId,
-            @RequestParam(required = false, defaultValue = "false") boolean byCache
+            @RequestParam(required = false, defaultValue = "false") boolean byCache,
+            @RequestParam(required = false, defaultValue = "false") boolean preventPenetration
     ) {
-        TaskResponse taskResponse = taskService.getTaskById(taskId, byCache);
+        TaskResponse taskResponse = taskService.getTaskById(taskId, byCache, preventPenetration);
         return APIResponse.getOKJsonResult(taskResponse);
     }
 
     @Override
     public APIResponse<List<TaskResponse>> getTaskByProjectId(
             int projectId,
-            @RequestParam(required = false, defaultValue = "false") boolean byCache
+            @RequestParam(required = false, defaultValue = "false") boolean byCache,
+            @RequestParam(required = false, defaultValue = "false") boolean preventPenetration
     ) {
-        List<TaskResponse> taskListResponse = taskService.getTasksByProjectId(projectId, byCache);
+        List<TaskResponse> taskListResponse = taskService.getTasksByProjectId(projectId, byCache, preventPenetration);
         return APIResponse.getOKJsonResult(taskListResponse);
     }
 
     @Override
     public APIResponse<List<TaskResponse>> getAllTasks(
-            @RequestParam(required = false, defaultValue = "false") boolean byCache
+            @RequestParam(required = false, defaultValue = "false") boolean byCache,
+            @RequestParam(required = false, defaultValue = "false") boolean preventPenetration
     ) {
-        List<TaskResponse> taskListResponse = taskService.getAllTasks(byCache);
+        List<TaskResponse> taskListResponse = taskService.getAllTasks(byCache, preventPenetration);
         return APIResponse.getOKJsonResult(taskListResponse);
     }
 

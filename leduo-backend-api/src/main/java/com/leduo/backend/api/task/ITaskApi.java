@@ -15,18 +15,21 @@ public interface ITaskApi {
     @GetMapping(value = "/task/{taskId}")
     APIResponse<TaskResponse> getTaskById(
             @NotNull @PathVariable int taskId,
-            @RequestParam(required = false, defaultValue = "false") boolean byCache
+            @RequestParam(required = false, defaultValue = "false") boolean byCache,
+            @RequestParam(required = false, defaultValue = "false") boolean preventPenetration
     );
 
     @GetMapping(value = "/project/{projectId}/tasks")
     APIResponse<List<TaskResponse>> getTaskByProjectId(
             @NotNull @PathVariable int projectId,
-            @RequestParam(required = false, defaultValue = "false") boolean byCache
+            @RequestParam(required = false, defaultValue = "false") boolean byCache,
+            @RequestParam(required = false, defaultValue = "false") boolean preventPenetration
     );
 
     @GetMapping(value = "/tasks")
     APIResponse<List<TaskResponse>> getAllTasks(
-            @RequestParam(required = false, defaultValue = "false") boolean byCache
+            @RequestParam(required = false, defaultValue = "false") boolean byCache,
+            @RequestParam(required = false, defaultValue = "false") boolean preventPenetration
     );
 
     @PostMapping(value = "/task")
